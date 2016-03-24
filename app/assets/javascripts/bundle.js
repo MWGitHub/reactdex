@@ -53,6 +53,7 @@
 	var hashHistory = ReactRouter.hashHistory;
 	var PokemonsIndex = __webpack_require__(159);
 	var PokemonDetail = __webpack_require__(235);
+	var ToyDetail = __webpack_require__(238);
 	
 	var App = React.createClass({
 	  displayName: 'App',
@@ -73,7 +74,11 @@
 	  React.createElement(
 	    Route,
 	    { path: '/', component: App },
-	    React.createElement(Route, { path: 'pokemon/:pokemonId', component: PokemonDetail })
+	    React.createElement(
+	      Route,
+	      { path: 'pokemon/:pokemonId', component: PokemonDetail },
+	      React.createElement(Route, { path: 'toys/:toyId', component: ToyDetail })
+	    )
 	  )
 	);
 	
@@ -19690,6 +19695,7 @@
 	var PokemonStore = __webpack_require__(160);
 	var apiUtil = __webpack_require__(183);
 	var PokemonIndexItem = __webpack_require__(185);
+	var PokemonForm = __webpack_require__(239);
 	
 	var PokemonsIndex = React.createClass({
 	  displayName: 'PokemonsIndex',
@@ -19723,6 +19729,7 @@
 	    return React.createElement(
 	      'div',
 	      { className: 'pokemon-index-pane' },
+	      React.createElement(PokemonForm, null),
 	      React.createElement(
 	        'ul',
 	        null,
@@ -19768,6 +19775,19 @@
 	
 	PokemonStore.find = function (id) {
 	  return _pokemons[id];
+	};
+	
+	PokemonStore.findToy = function (pokemonId, toyId) {
+	  if (_pokemons[pokemonId]) {
+	    var toys = _pokemons[pokemonId].toys;
+	    if (!toys) return null;
+	    for (var i = 0; i < toys.length; i++) {
+	      if (toys[i].id === toyId) {
+	        return toys[i];
+	      }
+	    }
+	  }
+	  return null;
 	};
 	
 	PokemonStore.all = function () {
@@ -26597,6 +26617,19 @@
 	        PokemonActions.receiveSinglePokemon(data);
 	      }
 	    });
+	  },
+	
+	  createPokemon: function (pokemon, callback) {
+	    $.ajax({
+	      type: "POST",
+	      url: "/api/pokemon",
+	      dataType: "json",
+	      data: { pokemon: pokemon },
+	      success: function (data) {
+	        PokemonActions.receiveSinglePokemon(data);
+	        callback(data.id);
+	      }
+	    });
 	  }
 	};
 	
@@ -31313,6 +31346,7 @@
 	var React = __webpack_require__(1);
 	var PokemonStore = __webpack_require__(160);
 	var apiUtil = __webpack_require__(183);
+	var ToysIndex = __webpack_require__(236);
 	
 	var PokemonDetail = React.createClass({
 	  displayName: 'PokemonDetail',
@@ -31356,10 +31390,14 @@
 	        React.createElement(
 	          'div',
 	          { className: 'detail' },
-	          React.createElement('img', { src: this.state.pokemon.image_url }),
 	          React.createElement(
 	            'ul',
 	            null,
+	            React.createElement(
+	              'li',
+	              null,
+	              React.createElement('img', { src: this.state.pokemon.image_url })
+	            ),
 	            React.createElement(
 	              'li',
 	              null,
@@ -31371,12 +31409,6 @@
 	              null,
 	              'Type: ',
 	              this.state.pokemon.poke_type
-	            ),
-	            React.createElement(
-	              'li',
-	              null,
-	              'Number: ',
-	              this.state.pokemon.id
 	            ),
 	            React.createElement(
 	              'li',
@@ -31394,16 +31426,505 @@
 	              'li',
 	              null,
 	              'Moves: ',
-	              this.state.pokemon.moves
+	              this.state.pokemon.moves.join(', ')
 	            )
-	          )
+	          ),
+	          React.createElement(ToysIndex, { toys: this.state.pokemon.toys })
+	        )
+	      ),
+	      this.props.children
+	    );
+	  }
+	});
+	
+	module.exports = PokemonDetail;
+
+/***/ },
+/* 236 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var ToyIndexItem = __webpack_require__(237);
+	
+	var ToysIndex = React.createClass({
+	  displayName: 'ToysIndex',
+	
+	  render: function () {
+	    if (!this.props.toys) {
+	      return React.createElement('ul', null);
+	    }
+	    var toys = this.props.toys.map(function (toy) {
+	      return React.createElement(ToyIndexItem, { toy: toy, key: toy.id });
+	    });
+	
+	    return React.createElement(
+	      'ul',
+	      null,
+	      toys
+	    );
+	  }
+	});
+	
+	module.exports = ToysIndex;
+
+/***/ },
+/* 237 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var History = __webpack_require__(186).History;
+	
+	var ToyIndexItem = React.createClass({
+	  displayName: 'ToyIndexItem',
+	
+	  mixins: [History],
+	
+	  handleClick: function (e) {
+	    this.history.push('/pokemon/' + this.props.toy.pokemon_id + '/toys/' + this.props.toy.id);
+	  },
+	
+	  render: function () {
+	    return React.createElement(
+	      'li',
+	      { className: 'toy-list-item', onClick: this.handleClick },
+	      React.createElement(
+	        'p',
+	        null,
+	        'Name: ',
+	        this.props.toy.name
+	      ),
+	      React.createElement(
+	        'p',
+	        null,
+	        'Happiness: ',
+	        this.props.toy.happiness
+	      ),
+	      React.createElement(
+	        'p',
+	        null,
+	        'Price: ',
+	        this.props.toy.price
+	      )
+	    );
+	  }
+	});
+	
+	module.exports = ToyIndexItem;
+
+/***/ },
+/* 238 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var PokemonStore = __webpack_require__(160);
+	
+	var ToyDetail = React.createClass({
+	  displayName: 'ToyDetail',
+	
+	
+	  getInitialState: function () {
+	    return this.getStateFromStore(this.props);
+	  },
+	
+	  getStateFromStore: function (props) {
+	    return {
+	      toy: PokemonStore.findToy(props.params.pokemonId, parseInt(props.params.toyId))
+	    };
+	  },
+	
+	  componentDidMount: function () {
+	    this.token = PokemonStore.addListener(this._onChange);
+	  },
+	
+	  componentWillUnmount: function () {
+	    this.token.remove();
+	  },
+	
+	  _onChange: function () {
+	    this.setState(this.getStateFromStore(this.props));
+	  },
+	
+	  componentWillReceiveProps: function (newProps) {
+	    this.setState(this.getStateFromStore(newProps));
+	  },
+	
+	  render: function () {
+	    if (!this.state.toy) {
+	      return React.createElement('div', null);
+	    }
+	    return React.createElement(
+	      'div',
+	      { className: 'detail toy-detail-pane' },
+	      React.createElement(
+	        'ul',
+	        null,
+	        React.createElement(
+	          'li',
+	          null,
+	          React.createElement('img', { src: this.state.toy.image_url })
+	        ),
+	        React.createElement(
+	          'li',
+	          null,
+	          'Name: ',
+	          this.state.toy.name
+	        ),
+	        React.createElement(
+	          'li',
+	          null,
+	          'Happiness: ',
+	          this.state.toy.happiness
+	        ),
+	        React.createElement(
+	          'li',
+	          null,
+	          'Price: ',
+	          this.state.toy.price
 	        )
 	      )
 	    );
 	  }
 	});
 	
-	module.exports = PokemonDetail;
+	module.exports = ToyDetail;
+
+/***/ },
+/* 239 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var apiUtil = __webpack_require__(183);
+	var LinkedStateMixin = __webpack_require__(240);
+	var History = __webpack_require__(186).History;
+	var PokemonActions = __webpack_require__(184);
+	
+	var PokemonForm = React.createClass({
+	  displayName: 'PokemonForm',
+	
+	  mixins: [LinkedStateMixin, History],
+	
+	  getInitialState: function () {
+	    return {
+	      name: "",
+	      type: "",
+	      attack: "",
+	      defense: "",
+	      moves: "",
+	      url: ""
+	    };
+	  },
+	
+	  _onSubmit: function (e) {
+	    e.stopPropagation();
+	    e.preventDefault();
+	    var pokemon = {
+	      name: this.state.name,
+	      poke_type: this.state.type,
+	      attack: this.state.attack,
+	      defense: this.state.defense,
+	      moves: this.state.moves.split(', '),
+	      image_url: this.state.url
+	    };
+	    this.setState(this.getInitialState());
+	
+	    apiUtil.createPokemon(pokemon, function (id) {
+	      this.history.push('/pokemon/' + id);
+	    }.bind(this));
+	  },
+	
+	  render: function () {
+	    var selections = window.pokemonTypes.map(function (type, i) {
+	      return React.createElement(
+	        'option',
+	        { key: i, value: type },
+	        type
+	      );
+	    });
+	    return React.createElement(
+	      'form',
+	      { onSubmit: this._onSubmit },
+	      React.createElement(
+	        'label',
+	        null,
+	        'Name',
+	        React.createElement('input', { type: 'text', valueLink: this.linkState("name") })
+	      ),
+	      React.createElement('br', null),
+	      React.createElement(
+	        'label',
+	        null,
+	        'Type',
+	        React.createElement(
+	          'select',
+	          { valueLink: this.linkState("type") },
+	          selections
+	        )
+	      ),
+	      React.createElement('br', null),
+	      React.createElement(
+	        'label',
+	        null,
+	        'Attack',
+	        React.createElement('input', { type: 'text', valueLink: this.linkState("attack") })
+	      ),
+	      React.createElement('br', null),
+	      React.createElement(
+	        'label',
+	        null,
+	        'Defense',
+	        React.createElement('input', { type: 'text', valueLink: this.linkState("defense") })
+	      ),
+	      React.createElement('br', null),
+	      React.createElement(
+	        'label',
+	        null,
+	        'Moves (Separated by commas)',
+	        React.createElement('input', { type: 'text', valueLink: this.linkState("moves") })
+	      ),
+	      React.createElement('br', null),
+	      React.createElement(
+	        'label',
+	        null,
+	        'Image URL',
+	        React.createElement('input', { type: 'text', valueLink: this.linkState("url") })
+	      ),
+	      React.createElement('br', null),
+	      React.createElement('input', { type: 'submit', value: 'Create Pokemon!' })
+	    );
+	  }
+	});
+	
+	module.exports = PokemonForm;
+
+/***/ },
+/* 240 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(241);
+
+/***/ },
+/* 241 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2013-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule LinkedStateMixin
+	 * @typechecks static-only
+	 */
+	
+	'use strict';
+	
+	var ReactLink = __webpack_require__(242);
+	var ReactStateSetters = __webpack_require__(243);
+	
+	/**
+	 * A simple mixin around ReactLink.forState().
+	 */
+	var LinkedStateMixin = {
+	  /**
+	   * Create a ReactLink that's linked to part of this component's state. The
+	   * ReactLink will have the current value of this.state[key] and will call
+	   * setState() when a change is requested.
+	   *
+	   * @param {string} key state key to update. Note: you may want to use keyOf()
+	   * if you're using Google Closure Compiler advanced mode.
+	   * @return {ReactLink} ReactLink instance linking to the state.
+	   */
+	  linkState: function (key) {
+	    return new ReactLink(this.state[key], ReactStateSetters.createStateKeySetter(this, key));
+	  }
+	};
+	
+	module.exports = LinkedStateMixin;
+
+/***/ },
+/* 242 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2013-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule ReactLink
+	 * @typechecks static-only
+	 */
+	
+	'use strict';
+	
+	/**
+	 * ReactLink encapsulates a common pattern in which a component wants to modify
+	 * a prop received from its parent. ReactLink allows the parent to pass down a
+	 * value coupled with a callback that, when invoked, expresses an intent to
+	 * modify that value. For example:
+	 *
+	 * React.createClass({
+	 *   getInitialState: function() {
+	 *     return {value: ''};
+	 *   },
+	 *   render: function() {
+	 *     var valueLink = new ReactLink(this.state.value, this._handleValueChange);
+	 *     return <input valueLink={valueLink} />;
+	 *   },
+	 *   _handleValueChange: function(newValue) {
+	 *     this.setState({value: newValue});
+	 *   }
+	 * });
+	 *
+	 * We have provided some sugary mixins to make the creation and
+	 * consumption of ReactLink easier; see LinkedValueUtils and LinkedStateMixin.
+	 */
+	
+	var React = __webpack_require__(2);
+	
+	/**
+	 * @param {*} value current value of the link
+	 * @param {function} requestChange callback to request a change
+	 */
+	function ReactLink(value, requestChange) {
+	  this.value = value;
+	  this.requestChange = requestChange;
+	}
+	
+	/**
+	 * Creates a PropType that enforces the ReactLink API and optionally checks the
+	 * type of the value being passed inside the link. Example:
+	 *
+	 * MyComponent.propTypes = {
+	 *   tabIndexLink: ReactLink.PropTypes.link(React.PropTypes.number)
+	 * }
+	 */
+	function createLinkTypeChecker(linkType) {
+	  var shapes = {
+	    value: typeof linkType === 'undefined' ? React.PropTypes.any.isRequired : linkType.isRequired,
+	    requestChange: React.PropTypes.func.isRequired
+	  };
+	  return React.PropTypes.shape(shapes);
+	}
+	
+	ReactLink.PropTypes = {
+	  link: createLinkTypeChecker
+	};
+	
+	module.exports = ReactLink;
+
+/***/ },
+/* 243 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2013-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule ReactStateSetters
+	 */
+	
+	'use strict';
+	
+	var ReactStateSetters = {
+	  /**
+	   * Returns a function that calls the provided function, and uses the result
+	   * of that to set the component's state.
+	   *
+	   * @param {ReactCompositeComponent} component
+	   * @param {function} funcReturningState Returned callback uses this to
+	   *                                      determine how to update state.
+	   * @return {function} callback that when invoked uses funcReturningState to
+	   *                    determined the object literal to setState.
+	   */
+	  createStateSetter: function (component, funcReturningState) {
+	    return function (a, b, c, d, e, f) {
+	      var partialState = funcReturningState.call(component, a, b, c, d, e, f);
+	      if (partialState) {
+	        component.setState(partialState);
+	      }
+	    };
+	  },
+	
+	  /**
+	   * Returns a single-argument callback that can be used to update a single
+	   * key in the component's state.
+	   *
+	   * Note: this is memoized function, which makes it inexpensive to call.
+	   *
+	   * @param {ReactCompositeComponent} component
+	   * @param {string} key The key in the state that you should update.
+	   * @return {function} callback of 1 argument which calls setState() with
+	   *                    the provided keyName and callback argument.
+	   */
+	  createStateKeySetter: function (component, key) {
+	    // Memoize the setters.
+	    var cache = component.__keySetters || (component.__keySetters = {});
+	    return cache[key] || (cache[key] = createStateKeySetter(component, key));
+	  }
+	};
+	
+	function createStateKeySetter(component, key) {
+	  // Partial state is allocated outside of the function closure so it can be
+	  // reused with every call, avoiding memory allocation when this function
+	  // is called.
+	  var partialState = {};
+	  return function stateKeySetter(value) {
+	    partialState[key] = value;
+	    component.setState(partialState);
+	  };
+	}
+	
+	ReactStateSetters.Mixin = {
+	  /**
+	   * Returns a function that calls the provided function, and uses the result
+	   * of that to set the component's state.
+	   *
+	   * For example, these statements are equivalent:
+	   *
+	   *   this.setState({x: 1});
+	   *   this.createStateSetter(function(xValue) {
+	   *     return {x: xValue};
+	   *   })(1);
+	   *
+	   * @param {function} funcReturningState Returned callback uses this to
+	   *                                      determine how to update state.
+	   * @return {function} callback that when invoked uses funcReturningState to
+	   *                    determined the object literal to setState.
+	   */
+	  createStateSetter: function (funcReturningState) {
+	    return ReactStateSetters.createStateSetter(this, funcReturningState);
+	  },
+	
+	  /**
+	   * Returns a single-argument callback that can be used to update a single
+	   * key in the component's state.
+	   *
+	   * For example, these statements are equivalent:
+	   *
+	   *   this.setState({x: 1});
+	   *   this.createStateKeySetter('x')(1);
+	   *
+	   * Note: this is memoized function, which makes it inexpensive to call.
+	   *
+	   * @param {string} key The key in the state that you should update.
+	   * @return {function} callback of 1 argument which calls setState() with
+	   *                    the provided keyName and callback argument.
+	   */
+	  createStateKeySetter: function (key) {
+	    return ReactStateSetters.createStateKeySetter(this, key);
+	  }
+	};
+	
+	module.exports = ReactStateSetters;
 
 /***/ }
 /******/ ]);

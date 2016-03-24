@@ -29,6 +29,19 @@ PokemonStore.find = function (id) {
   return _pokemons[id];
 };
 
+PokemonStore.findToy = function (pokemonId, toyId) {
+  if (_pokemons[pokemonId]) {
+    var toys = _pokemons[pokemonId].toys;
+    if (!toys) return null;
+    for (var i = 0; i < toys.length; i++) {
+      if (toys[i].id === toyId) {
+        return toys[i];
+      }
+    }
+  }
+  return null;
+};
+
 PokemonStore.all = function () {
   var result = [];
   for (var id in _pokemons) {

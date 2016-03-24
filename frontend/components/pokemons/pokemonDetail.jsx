@@ -1,6 +1,7 @@
 var React = require('react');
 var PokemonStore = require('../../stores/pokemon');
 var apiUtil = require('../../util/apiUtil');
+var ToysIndex = require('../toys/toysIndex');
 
 
 var PokemonDetail = React.createClass({
@@ -38,17 +39,18 @@ var PokemonDetail = React.createClass({
       <div>
         <div className="pokemon-detail-pane">
           <div className="detail">
-            <img src={this.state.pokemon.image_url} />
             <ul>
+              <li><img src={this.state.pokemon.image_url} /></li>
               <li>Name: {this.state.pokemon.name}</li>
               <li>Type: {this.state.pokemon.poke_type}</li>
-              <li>Number: {this.state.pokemon.id}</li>
               <li>Attack: {this.state.pokemon.attack}</li>
               <li>Defense: {this.state.pokemon.defense}</li>
-              <li>Moves: {this.state.pokemon.moves}</li>
+              <li>Moves: {this.state.pokemon.moves.join(', ')}</li>
             </ul>
+            <ToysIndex toys={this.state.pokemon.toys} />
           </div>
         </div>
+        {this.props.children}
       </div>
     );
   }

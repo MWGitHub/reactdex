@@ -21,6 +21,19 @@ var ApiUtil = {
         PokemonActions.receiveSinglePokemon(data);
       }
     });
+  },
+
+  createPokemon: function (pokemon, callback) {
+    $.ajax({
+      type: "POST",
+      url: "/api/pokemon",
+      dataType: "json",
+      data: {pokemon: pokemon},
+      success: function (data) {
+        PokemonActions.receiveSinglePokemon(data);
+        callback(data.id);
+      }
+    });
   }
 };
 

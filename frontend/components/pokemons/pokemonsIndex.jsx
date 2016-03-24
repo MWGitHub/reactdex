@@ -2,6 +2,7 @@ var React = require('react');
 var PokemonStore = require('../../stores/pokemon');
 var apiUtil = require('../../util/apiUtil');
 var PokemonIndexItem = require('./pokemonIndexItem');
+var PokemonForm = require('./pokemonForm');
 
 var PokemonsIndex = React.createClass({
   getInitialState: function () {
@@ -34,6 +35,7 @@ var PokemonsIndex = React.createClass({
 
     return (
       <div className="pokemon-index-pane">
+        <PokemonForm />
         <ul>
           {pokemons}
         </ul>

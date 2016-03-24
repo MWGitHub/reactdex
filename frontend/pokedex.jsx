@@ -7,7 +7,7 @@ var IndexRoute = ReactRouter.IndexRoute;
 var hashHistory = ReactRouter.hashHistory;
 var PokemonsIndex = require('./components/pokemons/pokemonsIndex');
 var PokemonDetail = require('./components/pokemons/pokemonDetail');
-
+var ToyDetail = require('./components/toys/toyDetail');
 
 var App = React.createClass({
   render: function () {
@@ -23,7 +23,9 @@ var App = React.createClass({
 var router = (
   <Router history={hashHistory}>
     <Route path="/" component={App}>
-      <Route path="pokemon/:pokemonId" component={PokemonDetail} />
+      <Route path="pokemon/:pokemonId" component={PokemonDetail}>
+        <Route path="toys/:toyId" component={ToyDetail} />
+      </Route>
     </Route>
   </Router>
 );
